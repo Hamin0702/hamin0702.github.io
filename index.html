@@ -1,7 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating Navigation Wheel</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevents scrolling */
+            background-color: white; /* Full-screen white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 1s ease; /* Smooth background color transition */
+        }
+
+        .wheel-container {
+            position: absolute;
+            width: 2000px; /* Larger size to accommodate all cards */
+            height: 2000px;
+            top: 100%; /* Move the center of the wheel below the screen */
+            left: 50%; /* Centered horizontally */
+            transform: translate(-50%, -30%); /* Adjust to position cards in view */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.5s ease-out; /* Smooth rotation */
+        }
+
+        .card {
+            position: absolute;
+            width: 220px;
+            height: 310px;
+            background-color: lightseagreen;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transform-origin: center center;
+            border-radius: 10px;
+            text-align: center;
+            user-select: none; /* Prevents text selection during dragging */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 1s ease, opacity 0.5s ease; /* Smooth transition for click effect */
+        }
+    </style>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <div class="wheel-container" id="wheel">
+        <!-- Cards will be generated here by JavaScript -->
+    </div>
+
+    <script>
+        const wheel = document.getElementById('wheel');
+        const numberOfCards = 8;
+        const radius = 700; // Adjusted radius to position cards on screen
+        let currentAngle = 0; // Track the current angle of rotation
+        let isDragging = false;
+        let startX = 0;
+
+        // Array of unique colors for each card
+        const cardColors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF', '#33FFF6', '#FF8633', '#8AFF33'];
+
+        // Create the cards and position them in the circular layout
+        for (let i = 0; i < numberOfCards; i++) {
+            const angle = (i * 2 * Math.PI) / numberOfCards; // Calculate the angle for each card
+            const x = radius * Math.cos(angle); // X coordinate
+            const y = radius * Math.sin(angle); // Y coordinate
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.transform = `translate(${x}px, ${y}px) rotate(${angle + Math.PI / 2}rad)`; // Point the card outward
+            card.style.backgroundColor = cardColors[i]; // Set each card's unique color
+            card.innerHTML = `<div>Card ${i + 1}</div><div>Title ${i + 1}</div>`;
+
+            // Add click event listener for each card to trigger the screen fill animation and rotation
+            card.addEventListener('click', () => {
+                rotateWheelToCard(i);
+                animateBackgroundColorChange(cardColors[i]);
+            });
+
+            wheel.appendChild(card);
+        }
+
+        // Function to rotate the wheel so that the clicked card is centered
+        function rotateWheelToCard(cardIndex) {
+            const targetAngle = -(cardIndex * (360 / numberOfCards)); // Calculate the angle to center the card
+            currentAngle = targetAngle;
+            wheel.style.transform = `translate(-50%, -30%) rotate(${currentAngle}deg)`; // Rotate to bring card to center
+        }
+
+        // Function to animate the background color change from left to right
+        function animateBackgroundColorChange(color) {
+            const backgroundDiv = document.createElement('div');
+            backgroundDiv.style.position = 'fixed';
+            backgroundDiv.style.top = '0';
+            backgroundDiv.style.left = '0';
+            backgroundDiv.style.width = '0';
+            backgroundDiv.style.height = '100%';
+            backgroundDiv.style.backgroundColor = color;
+            backgroundDiv.style.zIndex = '1';
+            backgroundDiv.style.transition = 'width 1s ease';
+
+            document.body.appendChild(backgroundDiv);
+
+            // Trigger the animation to fill the screen from left to right
+            setTimeout(() => {
+                backgroundDiv.style.width = '100%';
+            }, 10);
+        }
+
+        // Mouse event listeners for click-and-drag rotation
+        wheel.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX; // Store the initial mouse position
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - startX; // Calculate the change in mouse position
+                currentAngle += deltaX * 0.1; // Adjust the angle of rotation based on mouse movement
+                wheel.style.transform = `translate(-50%, -30%) rotate(${currentAngle}deg)`; // Rotate the wheel
+                startX = e.clientX; // Update the start position
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false; // Stop rotating when the mouse button is released
+        });
+
+        // Touch event listeners for mobile devices
+        wheel.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const deltaX = e.touches[0].clientX - startX;
+                currentAngle += deltaX * 0.1;
+                wheel.style.transform = `translate(-50%, -30%) rotate(${currentAngle}deg)`;
+                startX = e.touches[0].clientX;
+            }
+        });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+    </script>
 </body>
 </html>
